@@ -1,0 +1,69 @@
+---
+- name: Check if Go is already installed
+  command: /usr/local/go/bin/go version
+  register: go_version
+  ignore_errors: yes
+
+- name: Get latest Go version and package info
+  uri:
+    url: https://go.dev/dl/?mode=json
+    return_content: yes
+  register: go_package_info
+  when: go_version.failed
+
+- name: Set GO_VERSION variable
+  set_fact:
+    GO_VERSION: "{{ go_package_info.json[0].version }}"
+  when: go_version.failed
+
+- name: Set GO_SHA256 variable
+  set_fact:
+    GO_SHA256: "{{ go_package_info.json[0].files | selectattr('filename', 'equalto', GO_VERSION ~ '.linux-amd64.tar.gz') | map(attribute='sha256') | first }}"
+  when: go_version.failed
+
+- name: Download Go tarball
+  get_url:
+    url: "https://go.dev/dl/{{ GO_VERSION }}.linux-amd64.tar.gz"
+    dest: "/tmp/{{ GO_VERSION }}.linux-amd64.tar.gz"
+    mode: '0644'
+  when: go_version.failed
+
+- name: Verify Go tarball checksum
+  command: "echo '{{ GO_SHA256 }} /tmp/{{ GO_VERSION }}.linux-amd64.tar.gz' | sha256sum -c -"
+  when: go_version.failed
+
+- name: Extract Go tarball
+  unarchive:
+    src: "/tmp/{{ GO_VERSION }}.linux-amd64.tar.gz"
+    dest: /usr/local
+    remote_src: yes
+  when: go_version.failed
+
+- name: Move Go to versioned directory
+  command: mv /usr/local/go /usr/local/{{ GO_VERSION }}
+  when: go_version.failed
+
+- name: Remove old Go symlink
+  file:
+    path: /usr/local/go
+    state: absent
+  when: go_version.failed
+
+- name: Create new Go symlink
+  file:
+    src: /usr/local/{{ GO_VERSION }}
+    dest: /usr/local/go
+    state: link
+  when: go_version.failed
+
+- name: Ensure Go binary is in PATH
+  lineinfile:
+    path: /etc/profile
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+    state: present
+  become: yes
+  when: go_version.failed
+
+- name: Verify Go installation
+  command: /usr/local/go/bin/go version
+  when: go_version.failed

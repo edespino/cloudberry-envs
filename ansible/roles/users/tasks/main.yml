@@ -1,0 +1,188 @@
+---
+- name: Create gpadmin group
+  group:
+    name: gpadmin
+
+- name: Create gpadmin user and add to gpadmin group with /bin/bash shell
+  user:
+    name: gpadmin
+    group: gpadmin
+    create_home: yes
+    shell: /bin/bash
+
+- name: Add gpadmin user to sudo/google-sudoers group
+  block:
+    - name: Add gpadmin user to google-sudoers group (Rocky Linux)
+      user:
+        name: gpadmin
+        groups: google-sudoers
+        append: yes
+
+- name: Copy .ssh directory to gpadmin
+  command: cp -r /home/eespino/.ssh /home/gpadmin/.ssh
+  become: yes
+
+- name: Set ownership of .ssh directory to gpadmin
+  file:
+    path: /home/gpadmin/.ssh
+    state: directory
+    owner: gpadmin
+    group: gpadmin
+    recurse: yes
+
+- name: Check if .vimrc is already downloaded for multiple users
+  stat:
+    path: /home/{{ item }}/.vimrc
+  register: vimrc_files
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Download .vimrc for multiple users
+  get_url:
+    url: https://gist.githubusercontent.com/simonista/8703722/raw/d08f2b4dc10452b97d3ca15386e9eed457a53c61/.vimrc
+    dest: /home/{{ item.item }}/.vimrc
+    mode: '0644'
+  become: yes
+  become_user: "{{ item.item }}"
+  when: not item.stat.exists
+  loop: "{{ vimrc_files.results }}"
+  loop_control:
+    loop_var: item
+
+- name: Check if .tmux.conf is already downloaded for multiple users
+  stat:
+    path: /home/{{ item }}/.tmux.conf
+  register: tmux_conf_files
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Download .tmux.conf for multiple users
+  get_url:
+    url: https://raw.githubusercontent.com/tony/tmux-config/master/.tmux.conf
+    dest: /home/{{ item.item }}/.tmux.conf
+    mode: '0644'
+  become: yes
+  become_user: "{{ item.item }}"
+  when: not item.stat.exists
+  loop: "{{ tmux_conf_files.results }}"
+  loop_control:
+    loop_var: item
+
+- name: Check if Oh My Bash is already installed for eespino
+  stat:
+    path: /home/eespino/.oh-my-bash
+  register: ohmybash_eespino
+
+- name: Install Oh My Bash for eespino
+  shell: bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended
+  become: yes
+  become_user: eespino
+  when: not ohmybash_eespino.stat.exists
+  args:
+    chdir: /home/eespino
+
+- name: Check if Oh My Bash is already installed for gpadmin
+  stat:
+    path: /home/gpadmin/.oh-my-bash
+  register: ohmybash_gpadmin
+
+- name: Install Oh My Bash for gpadmin
+  shell: bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended
+  become: yes
+  become_user: gpadmin
+  when: not ohmybash_gpadmin.stat.exists
+  args:
+    chdir: /home/gpadmin
+
+- name: Ensure alias and environment variables are added to .bashrc for multiple users
+  block:
+    - name: Ensure alias cat=bat is added to .bashrc for multiple users
+      lineinfile:
+        path: /home/{{ item }}/.bashrc
+        line: "alias cat={{ alias_cmd }}"
+        state: present
+      become: yes
+      become_user: "{{ item }}"
+      loop:
+        - eespino
+        - gpadmin
+      vars:
+        alias_cmd: "{{ 'batcat' if ansible_facts['os_family'] == 'Debian' else 'bat' }}"
+      when: ansible_facts['os_family'] in ['Debian', 'RedHat']
+
+- name: Ensure BAT_PAGER environment variable is added to .bashrc for multiple users
+  lineinfile:
+    path: /home/{{ item }}/.bashrc
+    line: 'export BAT_PAGER=""'
+    state: present
+  become: yes
+  become_user: "{{ item }}"
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Ensure GIT_PAGER environment variable is added to .bashrc for multiple users
+  lineinfile:
+    path: /home/{{ item }}/.bashrc
+    line: 'export GIT_PAGER=cat'
+    state: present
+  become: yes
+  become_user: "{{ item }}"
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Ensure GH_PAGER environment variable is added to .bashrc for multiple users
+  lineinfile:
+    path: /home/{{ item }}/.bashrc
+    line: 'export GH_PAGER=""'
+    state: present
+  become: yes
+  become_user: "{{ item }}"
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Ensure timer function is added to .bashrc for multiple users
+  lineinfile:
+    path: /home/{{ item }}/.bashrc
+    line: '{ timer() { start=$(date +%s); "$@"; end=$(date +%s); runtime=$((end - start)); echo ""; echo "--------------------------------------------------"; echo "Executed: $@"; echo "Elapsed time: $(date -ud @$runtime +%H:%M:%S)"; echo "--------------------------------------------------"; echo ""; }; }'
+    state: present
+  become: yes
+  become_user: "{{ item }}"
+  loop:
+    - eespino
+    - gpadmin
+
+- name: Ensure Cloudberry entries are added to .bashrc for gpadmin
+  blockinfile:
+    path: /home/gpadmin/.bashrc
+    block: |
+      # Add Cloudberry entries
+      if [ -f /usr/local/cbdb/greenplum_path.sh ]; then
+        source /usr/local/cbdb/greenplum_path.sh
+      fi
+      if [ -f /opt/src/cloudberrydb/gpAux/gpdemo/gpdemo-env.sh ]; then
+        source /opt/src/cloudberrydb/gpAux/gpdemo/gpdemo-env.sh
+      fi
+  become: yes
+  become_user: gpadmin
+
+- name: Get the hostname of the current machine
+  command: hostname
+  register: current_hostname
+
+- name: Check if hostname is already in known_hosts
+  shell: grep -q "{{ current_hostname.stdout }}" /home/gpadmin/.ssh/known_hosts
+  register: hostname_in_known_hosts
+  ignore_errors: yes
+  become: yes
+  become_user: gpadmin
+
+- name: Add current hostname to known_hosts for gpadmin
+  shell: ssh-keyscan {{ current_hostname.stdout }} >> /home/gpadmin/.ssh/known_hosts
+  when: hostname_in_known_hosts.rc != 0
+  become: yes
+  become_user: gpadmin

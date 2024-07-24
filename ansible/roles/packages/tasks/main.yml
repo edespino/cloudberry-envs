@@ -1,0 +1,225 @@
+---
+- name: Update package cache for Rocky Linux
+  when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+  dnf:
+    update_cache: yes
+
+- name: Update package cache for Ubuntu
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+  apt:
+    update_cache: yes
+
+- name: Install initial packages
+  block:
+    - name: Install initial packages (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      dnf:
+        name:
+          - epel-release
+          - git
+          - tmux
+          - vim
+          - wget
+        state: present
+        update_cache: yes
+
+    - name: Install initial packages (Ubuntu)
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+      apt:
+        name:
+          - acl
+          - curl
+          - git
+          - tmux
+          - vim
+          - wget
+        state: present
+        update_cache: yes
+
+- name: Install additional packages
+  block:
+    - name: Install additional packages from EPEL (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      dnf:
+        name:
+          - the_silver_searcher
+          - bat
+          - htop
+        state: present
+        enablerepo: epel
+
+    - name: Install additional packages (Ubuntu)
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+      apt:
+        name:
+          - bat
+          - htop
+          - silversearcher-ag
+          - sudo
+          - tmux
+        state: present
+
+- name: Install build environment packages
+  block:
+    - name: Install build environment packages (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      dnf:
+        name:
+          - apr-devel
+          - autoconf
+          - bison
+          - bzip2
+          - bzip2-devel
+          - cmake3
+          - ed
+          - flex
+          - gcc
+          - gcc-c++
+          - glibc-langpack-en
+          - initscripts
+          - iproute
+          - java-1.8.0-openjdk
+          - java-1.8.0-openjdk-devel
+          - krb5-devel
+          - less
+          - libcurl-devel
+          - libevent-devel
+          - libuuid-devel
+          - libxml2-devel
+          - libzstd-devel
+          - lz4
+          - lz4-devel
+          - m4
+          - nc
+          - net-tools
+          - openldap-devel
+          - openssh-clients
+          - openssh-server
+          - openssl-devel
+          - pam-devel
+          - passwd
+          - perl
+          - perl-ExtUtils-Embed
+          - perl-Test-Simple
+          - perl-core
+          - python3-devel
+          - python3-lxml
+          - python3-psutil
+          - python3-pytest
+          - python3-pyyaml
+          - readline-devel
+          - rsync
+          - sudo
+          - tar
+          - unzip
+          - util-linux-ng
+          - wget
+          - which
+          - zlib-devel
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Install build environment packages (Ubuntu)
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+      apt:
+        name:
+          - autoconf
+          - bison
+          - curl
+          - flex
+          - g++
+          - gcc
+          - git
+          - iproute2
+          - iputils-ping
+          - libapr1-dev
+          - libbz2-dev
+          - libcurl4-openssl-dev
+          - libevent-dev
+          - libipc-run-perl
+          - libjansson-dev
+          - libkrb5-dev
+          - libldap-dev
+          - liblz4-dev
+          - libpam-dev
+          - libperl-dev
+          - libreadline-dev
+          - libssl-dev
+          - libtest-harness-perl
+          - libtest-simple-perl
+          - libuv1-dev
+          - libxerces-c-dev
+          - libxml2-dev
+          - libyaml-dev
+          - libzstd-dev
+          - locales
+          - make
+          - netcat-openbsd
+          - openjdk-11-jdk
+          - pkg-config
+          - python3-dev
+          - python3-lxml
+          - python3-psutil
+          - python3-pytest
+          - python3-setuptools
+          - python3-yaml
+          - rsync
+          - unzip
+          - vim
+          - wget
+          - zlib1g-dev
+        state: present
+        update_cache: yes
+      become: yes
+
+- name: Install additional packages from CRB
+  when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+  dnf:
+    name:
+      - libuv-devel
+      - libyaml-devel
+      - perl-IPC-Run
+    state: present
+    enablerepo: crb
+    update_cache: yes
+  become: yes
+
+- name: Install additional packages from EPEL
+  when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+  dnf:
+    name:
+      - xerces-c-devel
+    state: present
+    enablerepo: epel
+    update_cache: yes
+  become: yes
+
+- name: Set JAVA_HOME environment variable
+  block:
+    - name: Set JAVA_HOME environment variable (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      lineinfile:
+        path: /etc/profile
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk'
+        state: present
+      become: yes
+    - name: Set JAVA_HOME environment variable (Ubuntu)
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+      lineinfile:
+        path: /etc/profile
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+        state: present
+      become: yes
+
+- name: Generate locale en_US.UTF-8
+  command: locale-gen en_US.UTF-8
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+
+- name: Update locale to LANG=en_US.UTF-8
+  command: update-locale LANG=en_US.UTF-8
+  when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+
+- name: Include Go role
+  include_role:
+    name: go

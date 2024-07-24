@@ -1,0 +1,19 @@
+---
+- name: Ensure ~/.ssh directory exists
+  file:
+    path: "/home/{{ ssh_user }}/.ssh"
+    state: directory
+    mode: '0700'
+    owner: "{{ ssh_user }}"
+    group: "{{ ssh_user }}"
+
+- name: Add GitHub to known_hosts
+  shell: ssh-keyscan github.com >> /home/{{ ssh_user }}/.ssh/known_hosts
+  args:
+    creates: "/home/{{ ssh_user }}/.ssh/known_hosts"
+  become: yes
+  become_user: "{{ ssh_user }}"
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone }}"

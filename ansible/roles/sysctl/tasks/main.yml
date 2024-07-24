@@ -1,0 +1,65 @@
+---
+- name: Ensure SELinux/AppArmor is disabled
+  block:
+    - name: Ensure SELinux is disabled (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      selinux:
+        policy: targeted
+        state: disabled
+
+    - name: Set SELinux to permissive mode for the current session (Rocky Linux)
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+      command: setenforce 0
+
+    - name: Ensure AppArmor is disabled (Ubuntu)
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+      service:
+        name: apparmor
+        state: stopped
+        enabled: no
+
+- name: Stop and disable ufw (Ubuntu)
+  block:
+    - name: Check if ufw is installed
+      command: which ufw
+      register: ufw_installed
+      ignore_errors: yes
+
+    - name: Stop and disable ufw
+      service:
+        name: ufw
+        state: stopped
+        enabled: no
+      when: ufw_installed.rc == 0
+
+- name: Copy sysctl configuration
+  copy:
+    src: /home/eespino/90-db-sysctl.conf
+    dest: /etc/sysctl.d/90-db-sysctl.conf
+    owner: root
+    group: root
+    mode: '0644'
+    remote_src: yes
+
+- name: Apply sysctl settings
+  command: sysctl -p /etc/sysctl.d/90-db-sysctl.conf
+
+- name: Ensure /etc/security/limits.d directory exists
+  file:
+    path: /etc/security/limits.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Add limits to /etc/security/limits.d/90-db-limits.conf
+  copy:
+    dest: /etc/security/limits.d/90-db-limits.conf
+    content: |
+      * soft core unlimited
+      * hard core unlimited
+      * soft nofile 524288
+      * hard nofile 524288
+      * soft nproc 131072
+      * hard nproc 131072
+  become: yes

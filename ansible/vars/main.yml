@@ -1,0 +1,5 @@
+ssh_user: eespino
+gpadmin_user: gpadmin
+cloudberry_repo: 'https://github.com/edespino/cloudberrydb.git'
+cloudberry_branch: 'python-3.12.3-fixes'
+timezone: America/Los_Angeles

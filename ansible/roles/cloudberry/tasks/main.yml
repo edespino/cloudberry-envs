@@ -1,0 +1,55 @@
+---
+- name: Ensure /opt/src directory exists
+  file:
+    path: /opt/src
+    state: directory
+    mode: '0755'
+    owner: gpadmin
+    group: gpadmin
+  become: yes
+
+- name: Clone CloudberryDB repository with specific branch as gpadmin
+  git:
+    repo: "{{ cloudberry_repo }}"
+    dest: /opt/src/cloudberrydb
+    version: "{{ cloudberry_branch }}"
+    depth: 1
+    single_branch: yes
+  become: yes
+  become_user: gpadmin
+
+- name: Check if configure has already been run
+  stat:
+    path: /opt/src/cloudberrydb/config.log
+  register: configure_log
+
+- name: Run configure script for CloudberryDB
+  shell: |
+    ./configure --prefix=/usr/local/cbdb \
+                --disable-external-fts \
+                --enable-cassert \
+                --enable-debug-extensions \
+                --enable-gpcloud \
+                --enable-ic-proxy \
+                --enable-mapreduce \
+                --enable-orafce \
+                --enable-orca \
+                --enable-pxf \
+                --enable-tap-tests \
+                --with-gssapi \
+                --with-ldap \
+                --with-libxml \
+                --with-lz4 \
+                --with-openssl \
+                --with-pam \
+                --with-perl \
+                --with-pgport=5432 \
+                --with-python \
+                --with-pythonsrc-ext \
+                --with-ssl=openssl \
+                --with-uuid=e2fs | tee configure-$(date "+%Y.%m.%d-%H.%M.%S").log
+  args:
+    chdir: /opt/src/cloudberrydb
+  become: yes
+  become_user: gpadmin
+  when: not configure_log.stat.exists

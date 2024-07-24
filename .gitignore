@@ -1,0 +1,8 @@
+id_rsa*
+.terraform*
+terraform.tfstate*
+creds/*.json
+*.bak
+*.org
+*/inventory.ini
+*.log
