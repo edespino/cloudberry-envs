@@ -34,12 +34,11 @@
 
 - name: Copy sysctl configuration
   copy:
-    src: /home/eespino/90-db-sysctl.conf
+    src: files/90-db-sysctl.conf
     dest: /etc/sysctl.d/90-db-sysctl.conf
     owner: root
     group: root
     mode: '0644'
-    remote_src: yes
 
 - name: Apply sysctl settings
   command: sysctl -p /etc/sysctl.d/90-db-sysctl.conf

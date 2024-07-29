@@ -57,16 +57,4 @@ resource "google_compute_instance" "vm" {
       host        = self.network_interface[0].access_config[0].nat_ip
     }
   }
-
-  provisioner "file" {
-    source      = "files/90-db-sysctl.conf"
-    destination = "/home/eespino/90-db-sysctl.conf"
-
-    connection {
-      type        = "ssh"
-      user        = "eespino"
-      private_key = var.private_key
-      host        = self.network_interface[0].access_config[0].nat_ip
-    }
-  }
 }
