@@ -1,33 +1,34 @@
 module "network" {
   source = "../terraform/modules/network"
-  
-  vm_name    = var.vm_name
-  gcp_region = var.gcp_region
-  public_ip  = var.public_ip
+
+  VM_NAME    = var.VM_NAME
+  GCP_REGION = var.GCP_REGION
+  PUBLIC_IP  = var.PUBLIC_IP
 }
 
 module "ssh_keys" {
   source = "../terraform/modules/ssh_keys"
-  vm_count = var.instance_count
+  VM_COUNT = var.INSTANCE_COUNT
 }
 
 module "instances" {
   source = "../terraform/modules/instances"
-  
-  vm_name        = var.vm_name
-  gcp_zone       = var.gcp_zone
-  instance_count = var.instance_count
-  machine_type   = var.machine_type
-  boot_image     = var.boot_image
-  disk_type      = var.disk_type
-  subnet_id      = module.network.subnet_id
-  boot_disk_size = var.boot_disk_size
-  private_key    = module.ssh_keys.private_key
-  public_key     = module.ssh_keys.public_key
+
+  VM_NAME        = var.VM_NAME
+  GCP_ZONE       = var.GCP_ZONE
+  GCP_USER_NAME  = var.GCP_USER_NAME
+  INSTANCE_COUNT = var.INSTANCE_COUNT
+  MACHINE_TYPE   = var.MACHINE_TYPE
+  BOOT_IMAGE     = var.BOOT_IMAGE
+  DISK_TYPE      = var.DISK_TYPE
+  SUBNET_ID      = module.network.subnet_id
+  BOOT_DISK_SIZE = var.BOOT_DISK_SIZE
+  PRIVATE_KEY    = module.ssh_keys.PRIVATE_KEY
+  PUBLIC_KEY     = module.ssh_keys.PUBLIC_KEY
 }
 
 module "inventory" {
   source         = "../terraform/modules/inventory"
-  instance_ips   = module.instances.instance_ips
-  instance_count = module.instances.instance_count
+  INSTANCE_IPS   = module.instances.INSTANCE_IPS
+  INSTANCE_COUNT = module.instances.INSTANCE_COUNT
 }

@@ -54,30 +54,30 @@ scripts/
    Create a `terraform.tfvars` file in the `gcp-ubuntu24` directory with the following content:
    ```hcl
    # Number of instances to create
-   instance_count=1
+   INSTANCE_COUNT=1
 
    # Machine type to use for the instances
-   machine_type="n4-highmem-8"
+   MACHINE_TYPE="n4-highmem-8"
 
    # Note: The boot_image value is retrieved with the following command:
    # gcloud compute images list --filter="name = ubuntu-minimal-2404-noble-amd64 AND family != arm64"
-   boot_image="https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20240717"
+   BOOT_IMAGE="https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2404-noble-amd64-v20240717"
    ```
 
 5. **Update the Boot Image**:
-   Use the provided `update_boot_image.sh` script in the `scripts` directory to update the `boot_image` value in the `terraform.tfvars` file if necessary.
+   Use the provided `update_boot_image.sh` script in the `scripts` directory to update the `BOOT_IMAGE` value in the `terraform.tfvars` file if necessary.
    ```sh
    ../scripts/update_boot_image.sh
    ```
 
 ## Description of `update_boot_image.sh` Script
 
-The `update_boot_image.sh` script automates the process of updating the `boot_image` value in the `terraform.tfvars` file. It performs the following steps:
+The `update_boot_image.sh` script automates the process of updating the `BOOT_IMAGE` value in the `terraform.tfvars` file. It performs the following steps:
 
 1. Checks if the `terraform.tfvars` file exists. If not, it prompts the user to create it first.
-2. Retrieves the latest `boot_image` using the `gcloud` command and filters by architecture `X86_64`.
-3. Compares the current `boot_image` value in `terraform.tfvars` with the latest value.
-4. Updates the `boot_image` value in `terraform.tfvars` if there is a change, or informs the user if no update is necessary.
+2. Retrieves the latest `BOOT_IMAGE` using the `gcloud` command and filters by architecture `X86_64`.
+3. Compares the current `BOOT_IMAGE` value in `terraform.tfvars` with the latest value.
+4. Updates the `BOOT_IMAGE` value in `terraform.tfvars` if there is a change, or informs the user if no update is necessary.
 
 ### Usage
 
