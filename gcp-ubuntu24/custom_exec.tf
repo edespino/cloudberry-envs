@@ -10,7 +10,7 @@ resource "null_resource" "custom_exec" {
 
     connection {
       type        = "ssh"
-      user        = "eespino"
+      user        = "${var.GCP_USER_NAME}"
       private_key = module.ssh_keys.PRIVATE_KEY
       host        = module.instances.INSTANCE_IPS[count.index]
     }
