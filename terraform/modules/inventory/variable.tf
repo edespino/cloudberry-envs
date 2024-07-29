@@ -1,9 +1,9 @@
-variable "instance_ips" {
+variable "INSTANCE_IPS" {
   description = "List of instance IPs"
   type        = list(string)
 }
 
-variable "instance_count" {
+variable "INSTANCE_COUNT" {
   description = "Number of instances"
   type        = number
 }

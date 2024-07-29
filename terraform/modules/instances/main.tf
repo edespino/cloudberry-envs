@@ -1,17 +1,17 @@
 resource "google_compute_instance" "vm" {
-  count                     = var.instance_count
-  name                      = "${var.vm_name}-${count.index + 1}"
-  hostname                  = "${var.vm_name}-${count.index + 1}.espino-apache.com"
-  machine_type              = var.machine_type
-  zone                      = var.gcp_zone
+  count                     = var.INSTANCE_COUNT
+  name                      = "${var.VM_NAME}-${count.index + 1}"
+  hostname                  = "${var.VM_NAME}-${count.index + 1}.espino-apache.com"
+  machine_type              = var.MACHINE_TYPE
+  zone                      = var.GCP_ZONE
   tags                      = ["ssh"]
   allow_stopping_for_update = true
 
   boot_disk {
     initialize_params {
-      image = var.boot_image
-      size  = var.boot_disk_size
-      type  = var.disk_type
+      image = var.BOOT_IMAGE
+      size  = var.BOOT_DISK_SIZE
+      type  = var.DISK_TYPE
     }
   }
 
@@ -23,7 +23,7 @@ resource "google_compute_instance" "vm" {
   }
 
   network_interface {
-    subnetwork = var.subnet_id
+    subnetwork = var.SUBNET_ID
 
     access_config {
       # Include this section to give the VM an external IP address
@@ -31,29 +31,29 @@ resource "google_compute_instance" "vm" {
   }
 
   metadata = {
-    ssh-keys = "eespino:${var.public_key}"
+    ssh-keys = "${var.GCP_USER_NAME}:${var.PUBLIC_KEY}"
   }
 
   provisioner "file" {
     source      = "${path.root}/ssh_keys/id_rsa-VMs"
-    destination = "/home/eespino/.ssh/id_rsa"
+    destination = "/home/${var.GCP_USER_NAME}/.ssh/id_rsa"
 
     connection {
       type        = "ssh"
-      user        = "eespino"
-      private_key = var.private_key
+      user        = var.GCP_USER_NAME
+      private_key = var.PRIVATE_KEY
       host        = self.network_interface[0].access_config[0].nat_ip
     }
   }
 
   provisioner "file" {
     source      = "${path.root}/ssh_keys/id_rsa-VMs.pub"
-    destination = "/home/eespino/.ssh/id_rsa.pub"
+    destination = "/home/${var.GCP_USER_NAME}/.ssh/id_rsa.pub"
 
     connection {
       type        = "ssh"
-      user        = "eespino"
-      private_key = var.private_key
+      user        = var.GCP_USER_NAME
+      private_key = var.PRIVATE_KEY
       host        = self.network_interface[0].access_config[0].nat_ip
     }
   }

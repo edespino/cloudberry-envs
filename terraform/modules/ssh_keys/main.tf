@@ -34,6 +34,6 @@ resource "null_resource" "remove_ssh_keys" {
   }
 
   triggers = {
-    vm_count = var.vm_count
+    vm_count = var.VM_COUNT
   }
 }

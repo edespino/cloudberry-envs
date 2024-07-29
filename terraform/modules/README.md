@@ -31,27 +31,27 @@ To use these modules, reference them in your Terraform configuration. Below is a
 module "network" {
   source = "../terraform/modules/network"
 
-  vm_name    = var.vm_name
-  gcp_region = var.gcp_region
-  public_ip  = var.public_ip
+  vm_name    = var.VM_NAME
+  gcp_region = var.GCP_REGION
+  public_ip  = var.PUBLIC_IP
 }
 
 module "ssh_keys" {
   source = "../terraform/modules/ssh_keys"
-  vm_count = var.instance_count
+  vm_count = var.INSTANCE_COUNT
 }
 
 module "instances" {
   source = "../terraform/modules/instances"
 
-  vm_name        = var.vm_name
-  gcp_zone       = var.gcp_zone
-  instance_count = var.instance_count
-  machine_type   = var.machine_type
-  boot_image     = var.boot_image
-  disk_type      = var.disk_type
+  vm_name        = var.VM_NAME
+  gcp_zone       = var.GCP_ZONE
+  instance_count = var.INSTANCE_COUNT
+  machine_type   = var.MACHINE_TYPE
+  boot_image     = var.BOOT_IMAGE
+  disk_type      = var.DISK_TYPE
   subnet_id      = module.network.subnet_id
-  boot_disk_size = var.boot_disk_size
+  boot_disk_size = var.BOOT_DISK_SIZE
   private_key    = module.ssh_keys.private_key
   public_key     = module.ssh_keys.public_key
 }

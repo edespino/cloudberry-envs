@@ -14,8 +14,8 @@ terraform {
 }
 
 provider "google" {
-  credentials = file(var.srvc_acct_file)
-  project     = var.gcp_project
-  region      = var.gcp_region
-  zone        = var.gcp_zone
+  credentials = file(var.SRVC_ACCT_FILE)
+  project     = var.GCP_PROJECT
+  region      = var.GCP_REGION
+  zone        = var.GCP_ZONE
 }

@@ -3,7 +3,7 @@ resource "null_resource" "generate_inventory" {
     command = <<EOT
       cat > ${path.root}/inventory.ini <<EOF
 [gcp_vms]
-${join("\n", var.instance_ips)}
+${join("\n", var.INSTANCE_IPS)}
 EOF
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -21,6 +21,6 @@ resource "null_resource" "remove_inventory" {
   }
 
   triggers = {
-    vm_count = var.instance_count
+    vm_count = var.INSTANCE_COUNT
   }
 }

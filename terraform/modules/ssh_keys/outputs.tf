@@ -1,7 +1,7 @@
-output "private_key" {
+output "PRIVATE_KEY" {
   value = data.local_file.private_key.content
 }
 
-output "public_key" {
+output "PUBLIC_KEY" {
   value = data.local_file.public_key.content
 }

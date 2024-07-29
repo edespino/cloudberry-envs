@@ -1,59 +1,63 @@
-variable "boot_disk_size" {
+variable "GCP_USER_NAME" {
+  description = "The username to use for SSH connections to the GCP instance"
+  type        = string
+}
+
+variable "BOOT_DISK_SIZE" {
   description = "The size of the boot disk for the VM"
   type        = number
   default     = 100
 }
 
-variable "boot_image" {
+variable "BOOT_IMAGE" {
   description = "The boot image for the VM"
   type        = string
-  default     = "projects/rocky-linux-cloud/global/images/rocky-linux-9-optimized-gcp-v20240717"
 }
 
-variable "disk_type" {
+variable "DISK_TYPE" {
   description = "The disk type for the VM"
   type        = string
   default     = "hyperdisk-balanced"
 }
 
-variable "gcp_project" {
+variable "GCP_PROJECT" {
   description = "The GCP project ID"
   type        = string
 }
 
-variable "gcp_region" {
+variable "GCP_REGION" {
   description = "The GCP region"
   type        = string
 }
 
-variable "gcp_zone" {
+variable "GCP_ZONE" {
   description = "The GCP zone"
   type        = string
 }
 
-variable "instance_count" {
+variable "INSTANCE_COUNT" {
   description = "Number of instances to create"
   type        = number
   default     = 1
 }
 
-variable "machine_type" {
+variable "MACHINE_TYPE" {
   description = "The machine type for the VM"
   type        = string
   default     = "n4-standard-2"
 }
 
-variable "public_ip" {
-  description = "Your Mac's public IP address"
+variable "PUBLIC_IP" {
+  description = "Your local host's public IP address"
   type        = string
 }
 
-variable "srvc_acct_file" {
+variable "SRVC_ACCT_FILE" {
   description = "Path to the service account credential file"
   type        = string
 }
 
-variable "vm_name" {
+variable "VM_NAME" {
   description = "The VM name suffix"
   type        = string
 }

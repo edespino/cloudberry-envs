@@ -1,14 +1,14 @@
-variable "gcp_region" {
+variable "GCP_REGION" {
   description = "The GCP region"
   type        = string
 }
 
-variable "public_ip" {
+variable "PUBLIC_IP" {
   description = "Your Mac's public IP address"
   type        = string
 }
 
-variable "vm_name" {
+variable "VM_NAME" {
   description = "The VM name suffix"
   type        = string
 }
