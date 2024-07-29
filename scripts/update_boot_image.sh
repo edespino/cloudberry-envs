@@ -36,14 +36,14 @@ if [ -z "$latest_boot_image" ]; then
 fi
 
 # Read the current boot_image value from terraform.tfvars
-current_boot_image=$(grep -E '^boot_image\s*=\s*".*"$' terraform.tfvars | sed 's/boot_image\s*=\s*"\(.*\)"/\1/')
+current_boot_image=$(grep -E '^BOOT_IMAGE\s*=\s*".*"$' terraform.tfvars | sed 's/BOOT_IMAGE\s*=\s*"\(.*\)"/\1/')
 
-# Compare the current and latest boot_image values
+# Compare the current and latest BOOT_IMAGE values
 if [ "$current_boot_image" == "$latest_boot_image" ]; then
   echo "No change in boot_image. Skipping update."
 else
   # Update the boot_image value in terraform.tfvars using a temporary file for portability
-  sed "s|^boot_image\s*=.*|boot_image=\"$latest_boot_image\"|" terraform.tfvars > temp.tfvars
+  sed "s|^BOOT_IMAGE\s*=.*|BOOT_IMAGE=\"$latest_boot_image\"|" terraform.tfvars > temp.tfvars
   mv temp.tfvars terraform.tfvars
   echo "terraform.tfvars has been updated with the latest boot_image."
 fi
