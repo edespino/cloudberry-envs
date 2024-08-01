@@ -6,3 +6,4 @@ creds/*.json
 *.org
 */inventory.ini
 *.log
+*.pem
