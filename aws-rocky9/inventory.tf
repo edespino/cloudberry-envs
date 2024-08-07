@@ -3,13 +3,13 @@ resource "null_resource" "generate_inventory" {
     environment = {
       INVENTORY_FILE = "${path.module}/${var.env_prefix}_inventory.ini"
       INFO_FILE = "${path.module}/${var.env_prefix}_instances_info.json"
-      GENERATED_KEY_PEM = "${path.module}/${var.env_prefix}_generated_key.pem"
+      GENERATED_KEY_PEM = "../${var.terraform_project_dir_name}/${var.env_prefix}_generated_key.pem"
     }
     command = <<EOT
       #!/bin/bash
       set -e
 
-      echo "[rocky]" > $INVENTORY_FILE
+      echo "[vms]" > $INVENTORY_FILE
 
       count=$(jq '.names | length' $INFO_FILE)
       for i in $(seq 0 $(($count - 1))); do

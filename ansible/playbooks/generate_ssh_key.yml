@@ -1,0 +1,32 @@
+---
+- name: Generate SSH key pair on Ansible controller
+  hosts: localhost
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+    - name: Generate SSH key pair
+      community.crypto.openssh_keypair:
+        path: /tmp/{{ gpadmin_user }}_id_rsa
+        type: rsa
+        size: 2048
+
+    - name: Read the private key
+      slurp:
+        src: /tmp/{{ gpadmin_user }}_id_rsa
+      register: private_key
+
+    - name: Read the public key
+      slurp:
+        src: /tmp/{{ gpadmin_user }}_id_rsa.pub
+      register: public_key
+
+    - name: Save private key to file
+      copy:
+        content: "{{ private_key.content | b64decode }}"
+        dest: /tmp/{{ gpadmin_user }}_id_rsa
+
+    - name: Save public key to file
+      copy:
+        content: "{{ public_key.content | b64decode }}"
+        dest: /tmp/{{ gpadmin_user }}_id_rsa.pub

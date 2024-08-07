@@ -10,32 +10,58 @@
     create_home: yes
     shell: /bin/bash
 
-- name: Add gpadmin user to sudo/google-sudoers group
-  block:
-    - name: Add gpadmin user to google-sudoers group (Rocky Linux)
-      user:
-        name: gpadmin
-        groups: google-sudoers
-        append: yes
-
-- name: Copy .ssh directory to gpadmin
-  command: cp -r /home/eespino/.ssh /home/gpadmin/.ssh
+- name: Ensure sudoers file has the required value
   become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^gpadmin ALL=\(ALL\) NOPASSWD:ALL'
+    line: 'gpadmin ALL=(ALL) NOPASSWD:ALL'
+    validate: '/usr/sbin/visudo -cf %s'
 
-- name: Set ownership of .ssh directory to gpadmin
+- name: Ensure .ssh directory exists for gpadmin
   file:
     path: /home/gpadmin/.ssh
     state: directory
     owner: gpadmin
     group: gpadmin
-    recurse: yes
+    mode: '0700'
+
+- name: Distribute the private key to all hosts
+  copy:
+    src: /tmp/gpadmin_id_rsa
+    dest: "{{ ssh_key_path }}"
+    owner: gpadmin
+    group: gpadmin
+    mode: '0600'
+
+- name: Distribute the public key to all hosts
+  copy:
+    src: /tmp/gpadmin_id_rsa.pub
+    dest: "{{ ssh_key_path }}.pub"
+    owner: gpadmin
+    group: gpadmin
+    mode: '0644'
+
+- name: Add public key to authorized_keys
+  authorized_key:
+    user: gpadmin
+    key: "{{ lookup('file', '/tmp/gpadmin_id_rsa.pub') }}"
+    state: present
+    path: "{{ authorized_keys_file }}"
+
+- name: Ensure correct permissions on authorized_keys file
+  file:
+    path: "{{ authorized_keys_file }}"
+    owner: gpadmin
+    group: gpadmin
+    mode: '0600'
 
 - name: Check if .vimrc is already downloaded for multiple users
   stat:
     path: /home/{{ item }}/.vimrc
   register: vimrc_files
   loop:
-    - eespino
     - gpadmin
 
 - name: Download .vimrc for multiple users
@@ -55,7 +81,6 @@
     path: /home/{{ item }}/.tmux.conf
   register: tmux_conf_files
   loop:
-    - eespino
     - gpadmin
 
 - name: Download .tmux.conf for multiple users
@@ -69,19 +94,6 @@
   loop: "{{ tmux_conf_files.results }}"
   loop_control:
     loop_var: item
-
-- name: Check if Oh My Bash is already installed for eespino
-  stat:
-    path: /home/eespino/.oh-my-bash
-  register: ohmybash_eespino
-
-- name: Install Oh My Bash for eespino
-  shell: bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)" --unattended
-  become: yes
-  become_user: eespino
-  when: not ohmybash_eespino.stat.exists
-  args:
-    chdir: /home/eespino
 
 - name: Check if Oh My Bash is already installed for gpadmin
   stat:
@@ -106,7 +118,6 @@
       become: yes
       become_user: "{{ item }}"
       loop:
-        - eespino
         - gpadmin
       vars:
         alias_cmd: "{{ 'batcat' if ansible_facts['os_family'] == 'Debian' else 'bat' }}"
@@ -120,7 +131,6 @@
   become: yes
   become_user: "{{ item }}"
   loop:
-    - eespino
     - gpadmin
 
 - name: Ensure GIT_PAGER environment variable is added to .bashrc for multiple users
@@ -131,7 +141,6 @@
   become: yes
   become_user: "{{ item }}"
   loop:
-    - eespino
     - gpadmin
 
 - name: Ensure GH_PAGER environment variable is added to .bashrc for multiple users
@@ -142,7 +151,6 @@
   become: yes
   become_user: "{{ item }}"
   loop:
-    - eespino
     - gpadmin
 
 - name: Ensure timer function is added to .bashrc for multiple users
@@ -153,7 +161,6 @@
   become: yes
   become_user: "{{ item }}"
   loop:
-    - eespino
     - gpadmin
 
 - name: Ensure Cloudberry entries are added to .bashrc for gpadmin

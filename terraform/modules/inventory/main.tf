@@ -2,7 +2,7 @@ resource "null_resource" "generate_inventory" {
   provisioner "local-exec" {
     command = <<EOT
       cat > ${path.root}/inventory.ini <<EOF
-[gcp_vms]
+[vms]
 ${join("\n", var.INSTANCE_IPS)}
 EOF
     EOT

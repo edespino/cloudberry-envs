@@ -1,3 +1,8 @@
+variable "terraform_project_dir_name" {
+  description = "This directory name"
+  type        = string
+}
+
 variable "region" {
   description = "The AWS region to create resources in"
   type        = string

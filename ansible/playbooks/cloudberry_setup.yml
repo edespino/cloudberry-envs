@@ -1,6 +1,6 @@
 ---
 - name: Setup CloudberryDB environment
-  hosts: gcp_vms
+  hosts: vms
   become: yes
   vars_files:
     - ../vars/main.yml
