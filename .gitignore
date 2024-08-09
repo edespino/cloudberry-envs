@@ -7,3 +7,5 @@ creds/*.json
 */inventory.ini
 *.log
 *.pem
+*instances_info.json
+*inventory.ini
