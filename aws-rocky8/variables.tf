@@ -33,3 +33,8 @@ variable "root_disk_size" {
   type        = number
   default     = 100
 }
+
+variable "my_ip" {
+  description = "Your current public IP address"
+  type        = string
+}
