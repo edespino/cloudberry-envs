@@ -12,7 +12,7 @@ resource "aws_network_interface" "private_nic" {
   count          = var.vm_count
   subnet_id      = aws_subnet.private.id
   private_ips    = ["10.0.2.${count.index + 100}"]
-  security_groups = [aws_security_group.allow_ssh.id]
+  security_groups = [aws_security_group.allow_all.id]
   tags = {
     Name = "${var.env_prefix}-private-nic-${count.index}"
   }
@@ -29,11 +29,11 @@ resource "null_resource" "pem_file" {
 }
 
 resource "aws_instance" "rocky_linux" {
-  count                 = var.vm_count
-  ami                   = var.ami
-  instance_type         = var.instance_type
-  key_name              = aws_key_pair.generated_key.key_name
-  subnet_id             = aws_subnet.public.id
+  count                       = var.vm_count
+  ami                         = var.ami
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.generated_key.key_name
+  subnet_id                   = aws_subnet.public.id
   associate_public_ip_address = true
 
   root_block_device {
@@ -41,17 +41,18 @@ resource "aws_instance" "rocky_linux" {
     volume_type = "gp2" # General Purpose SSD
   }
 
-  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+  vpc_security_group_ids = [aws_security_group.allow_all.id]
 
   tags = {
     Name = "${var.env_prefix}-instance-${count.index}"
   }
 
   user_data = <<-EOF
-                #!/bin/bash
-                hostnamectl set-hostname ${var.env_prefix}-instance-${count.index}
-                echo "127.0.0.1 ${var.env_prefix}-instance-${count.index}" >> /etc/hosts
-                EOF
+              #!/bin/bash
+              HOSTNAME="${count.index == 0 ? "mdw" : "sdw${count.index}"}"
+              hostnamectl set-hostname $HOSTNAME
+              echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
+              EOF
 
   depends_on = [null_resource.pem_file]
 }

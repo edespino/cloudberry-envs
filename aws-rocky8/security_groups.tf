@@ -1,12 +1,11 @@
-// security_groups.tf
-resource "aws_security_group" "allow_ssh" {
-  name_prefix = "${var.env_prefix}-allow_ssh"
+resource "aws_security_group" "allow_all" {
+  name_prefix = "${var.env_prefix}-allow_all"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"  // "-1" means all protocols
     cidr_blocks = ["${var.my_ip}/32", "10.0.2.0/24"]
   }
 
