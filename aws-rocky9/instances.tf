@@ -43,18 +43,45 @@ resource "aws_instance" "rocky_linux" {
 
   vpc_security_group_ids = [aws_security_group.allow_all.id]
 
+  # Use cloud-init content directly, only passing basic variables
+  user_data = templatefile("${path.module}/cloud-init.yml", {
+    hostname = count.index == 0 ? "mdw" : "sdw${count.index}",
+  })
+
   tags = {
     Name = "${var.env_prefix}-instance-${count.index}"
   }
 
-  user_data = <<-EOF
-              #!/bin/bash
-              HOSTNAME="${count.index == 0 ? "mdw" : "sdw${count.index}"}"
-              hostnamectl set-hostname $HOSTNAME
-              echo "127.0.0.1 $HOSTNAME" >> /etc/hosts
-              EOF
-
   depends_on = [null_resource.pem_file]
+}
+
+resource "aws_ebs_volume" "data_volume" {
+  count             = var.vm_count * var.data_drive_count
+  availability_zone = "${var.region}a"
+  size              = var.data_drive_size
+  type              = var.data_drive_type
+
+  # Conditional IOPS for io1/io2 and throughput for gp3
+  iops = var.data_drive_type == "io1" || var.data_drive_type == "io2" ? var.iops : null
+  throughput = var.data_drive_type == "gp3" ? var.throughput : null
+
+  tags = {
+    Name = "${var.env_prefix}-data-volume-${count.index}"
+  }
+}
+
+resource "aws_volume_attachment" "ebs_attach" {
+  count = var.vm_count * var.data_drive_count
+
+  device_name = "/dev/sd${element(["f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"], count.index % var.data_drive_count)}"
+
+  volume_id   = aws_ebs_volume.data_volume[count.index].id
+  instance_id = aws_instance.rocky_linux[floor(count.index / var.data_drive_count)].id
+
+  depends_on = [
+    aws_instance.rocky_linux,
+    aws_ebs_volume.data_volume
+  ]
 }
 
 resource "aws_network_interface_attachment" "private_nic_attachment" {
@@ -62,6 +89,11 @@ resource "aws_network_interface_attachment" "private_nic_attachment" {
   instance_id          = aws_instance.rocky_linux[count.index].id
   network_interface_id = aws_network_interface.private_nic[count.index].id
   device_index         = 1
+
+  depends_on = [
+    aws_instance.rocky_linux, # Ensure the instance is fully provisioned
+    aws_network_interface.private_nic, # Ensure NIC is created
+  ]
 }
 
 resource "local_file" "instances_info" {
